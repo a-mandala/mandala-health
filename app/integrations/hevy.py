@@ -15,7 +15,7 @@ def _load_api_key() -> str:
     return open(DEFAULT_API_KEY_PATH).read().strip()
 
 
-def get_hevy_service() -> HevyService:
+def get_hevy_service() -> "HevyService":
     return HevyService()
 
 
