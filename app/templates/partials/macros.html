@@ -1,0 +1,21 @@
+<section id="macros-summary" class="mb-6">
+  <h2 class="text-lg font-semibold mb-2 text-slate-300">Oggi</h2>
+  <div class="rounded-2xl bg-slate-900 p-4 space-y-3">
+    {% for key, label, unit in [("energy", "Kcal", "kcal"), ("protein", "Proteine", "g"), ("fat", "Grassi", "g")] %}
+    <div>
+      <div class="flex justify-between text-sm">
+        <span>{{ label }}</span>
+        <span class="text-slate-400">{{ nutrition[key] | round(0) }} / {{ targets[key] | round(0) }} {{ unit }}</span>
+      </div>
+      <div class="h-2 bg-slate-800 rounded-full mt-1">
+        <div class="h-2 rounded-full {% if nutrition[key] > targets[key] %}bg-red-500{% else %}bg-emerald-500{% endif %}"
+             style="width: {{ [((nutrition[key] or 0) / targets[key] * 100), 100] | min }}%"></div>
+      </div>
+    </div>
+    {% endfor %}
+    <div class="flex justify-between text-sm">
+      <span>Carboidrati</span>
+      <span class="text-slate-400">{{ nutrition["carbs"] | round(0) }} g</span>
+    </div>
+  </div>
+</section>

@@ -5,29 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mandala Health</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-100 p-4 max-w-md mx-auto">
   <h1 class="text-2xl font-bold mb-4">Mandala Health</h1>
 
+  {% include "partials/macros.html" %}
+
   <section class="mb-6">
-    <h2 class="text-lg font-semibold mb-2 text-slate-300">Oggi</h2>
+    <h2 class="text-lg font-semibold mb-2 text-slate-300">Log rapido</h2>
     <div class="rounded-2xl bg-slate-900 p-4 space-y-3">
-      {% for key, label, unit in [("energy", "Kcal", "kcal"), ("protein", "Proteine", "g"), ("fat", "Grassi", "g")] %}
       <div>
-        <div class="flex justify-between text-sm">
-          <span>{{ label }}</span>
-          <span class="text-slate-400">{{ nutrition[key] | round(0) }} / {{ targets[key] | round(0) }} {{ unit }}</span>
-        </div>
-        <div class="h-2 bg-slate-800 rounded-full mt-1">
-          <div class="h-2 rounded-full {% if nutrition[key] > targets[key] %}bg-red-500{% else %}bg-emerald-500{% endif %}"
-               style="width: {{ [((nutrition[key] or 0) / targets[key] * 100), 100] | min }}%"></div>
-        </div>
+        <label for="food-search" class="block text-sm text-slate-400 mb-1">Cerca alimento</label>
+        <input id="food-search" name="q" type="search" autocomplete="off" placeholder="es. banana"
+               class="w-full min-h-[44px] px-4 rounded-xl bg-slate-800 text-slate-100"
+               hx-get="/api/foods/search" hx-target="#food-search-results" hx-trigger="input changed delay:300ms" />
+        <div id="food-search-results"></div>
       </div>
-      {% endfor %}
-      <div class="flex justify-between text-sm">
-        <span>Carboidrati</span>
-        <span class="text-slate-400">{{ nutrition["carbs"] | round(0) }} g</span>
-      </div>
+
+      <form id="quick-log-form"
+            hx-post="/api/log"
+            hx-target="#macros-summary"
+            hx-swap="outerHTML"
+            class="space-y-3">
+        <input type="hidden" name="food_id" id="food-id" />
+        <input type="hidden" name="measure_id" id="measure-id" />
+        <p id="selected-food" class="text-sm text-slate-300"></p>
+
+        <div>
+          <label for="grams" class="block text-sm text-slate-400 mb-1">Quantità (g)</label>
+          <input id="grams" name="grams" type="number" inputmode="decimal" min="1" step="1" value="100"
+                 class="w-full min-h-[44px] px-4 rounded-xl bg-slate-800 text-slate-100" />
+        </div>
+
+        <fieldset class="grid grid-cols-2 gap-2">
+          <legend class="sr-only">Pasto</legend>
+          {% for value, label in [("breakfast", "Colazione"), ("lunch", "Pranzo"), ("dinner", "Cena"), ("snacks", "Snack")] %}
+          <label class="min-h-[44px] flex items-center justify-center rounded-xl bg-slate-800 has-checked:bg-emerald-600">
+            <input type="radio" name="meal" value="{{ value }}" {% if loop.first %}checked{% endif %} class="sr-only" />
+            <span class="text-sm font-medium">{{ label }}</span>
+          </label>
+          {% endfor %}
+        </fieldset>
+
+        <button type="submit"
+                class="w-full min-h-[44px] rounded-xl bg-emerald-600 font-semibold active:bg-emerald-500">
+          Aggiungi
+        </button>
+      </form>
     </div>
   </section>
 
@@ -43,5 +68,16 @@
       {% endfor %}
     </div>
   </section>
+
+  <script>
+    document.addEventListener("click", function (event) {
+      const btn = event.target.closest("#food-results button");
+      if (!btn) return;
+      document.getElementById("food-id").value = btn.dataset.foodId;
+      document.getElementById("measure-id").value = btn.dataset.measureId;
+      document.getElementById("selected-food").textContent = "Selezionato: " + btn.dataset.name;
+      document.getElementById("food-search-results").innerHTML = "";
+    });
+  </script>
 </body>
 </html>

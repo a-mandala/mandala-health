@@ -1,0 +1,19 @@
+<ul id="food-results" class="mt-1 rounded-2xl bg-slate-900 divide-y divide-slate-800 overflow-hidden">
+  {% for f in results %}
+  <li>
+    <button type="button"
+            class="w-full min-h-[44px] px-4 py-2 flex items-center justify-between text-left active:bg-slate-800"
+            data-food-id="{{ f.food_id }}"
+            data-measure-id="{{ f.measure_id }}"
+            data-name="{{ f.name }}">
+      <span>
+        <span class="font-medium">{{ f.name }}</span>
+        <span class="block text-xs text-slate-400">{{ f.source }} · {{ f.measure_display }}</span>
+      </span>
+      <span class="text-sm text-emerald-400 whitespace-nowrap">{{ f.kcal_per_100g }} kcal/100g</span>
+    </button>
+  </li>
+  {% else %}
+  <li class="px-4 py-3 text-sm text-slate-400 min-h-[44px] flex items-center">Nessun risultato</li>
+  {% endfor %}
+</ul>
