@@ -2,15 +2,15 @@
 
 [![CI](https://github.com/a-mandala/mandala-health/actions/workflows/ci.yml/badge.svg)](https://github.com/a-mandala/mandala-health/actions/workflows/ci.yml) [![Docker](https://github.com/a-mandala/mandala-health/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/a-mandala/mandala-health/actions/workflows/docker-publish.yml) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 
-Self-hosted personal health dashboard on urano: nutrition (food database locale SQLite),
-training (Hevy), health metrics (Garmin) and medical archive — one integrated
-panel, privacy-first, LAN-only.
+Self-hosted personal health dashboard on urano: nutrition (alimenti da
+Open Food Facts + diario locale), training (Hevy), health metrics (Garmin)
+and medical archive — one integrated panel, privacy-first, LAN-only.
 
 ## Stack
 
 - Python + FastAPI, Jinja2 templates, HTMX + Alpine.js, Tailwind (CDN)
-- SQLite for local cache/history
-- Food database: locale, SQLite (`data/foods.db`), nessuna credenziale necessaria
+- SQLite for local diary/history (`data/entries.db`)
+- Food data: Open Food Facts (unica fonte, nessuna credenziale) — niente food DB locale
 - Integrations: Hevy (REST), Garmin (MCP)
 - TDD enforced (pytest)
 
@@ -29,7 +29,26 @@ uv run uvicorn app.main:app --port 8020
 Endpoints:
 
 - `GET /api/today` — JSON: `{nutrition: {energy, protein, carbs, fat}, last_workout: {date, exercises}}`
-- `GET /` — mobile-first dashboard (kcal vs 2400, proteine vs 155, grassi vs 60, card ultima sessione)
+- `GET /api/foods/search?q=` — ricerca alimenti su Open Food Facts (503 JSON se OFF non raggiungibile)
+- `GET /api/foods/barcode/{code}` — prodotto OFF per barcode (404 se inesistente)
+- `POST /api/log` — logga una voce del diario (snapshot dell'alimento) in SQLite
+- `GET /api/version` — `{version, git_hash, build_date}` (git hash iniettato al build; "dev" in locale)
+- `GET /` — mobile-first dashboard (kcal vs 2400, proteine vs 155, grassi vs 60, card ultima sessione, footer con versione)
+
+## Architettura nutrizione
+
+- **Fonte dati unica: Open Food Facts** (`app/integrations/off.py`, `OFFService`):
+  search (`cgi/search.pl`) e barcode (`api/v2/product/{code}.json`), normalizzati
+  a macro per 100 g (kJ → kcal fallback `/4.184`, prodotti senza nome →
+  "Prodotto sconosciuto"), ordinati per completeness. Mai chiamate reali nei
+  test (respx).
+- **Diario locale** (`app/integrations/entries.py`, `EntryStore`): le voci
+  loggate salvano uno snapshot dell'alimento (code, nome, brand, macro per
+  100 g) in SQLite `data/entries.db` — il riepilogo del giorno funziona anche
+  offline e sopravvive ai rebuild (volume `./data`).
+- **Versione visibile**: `ARG GIT_VERSION` nel Dockerfile → `ENV APP_VERSION`,
+  passata dal workflow `docker-publish`. Esposta su `/api/version` e nel
+  footer della dashboard (`v<hash>`, link a `/api/version`).
 
 ## Tests
 
@@ -37,8 +56,9 @@ Endpoints:
 uv run pytest -v
 ```
 
-All tests are offline: the food database runs on SQLite in `tmp_path`, Hevy is
-mocked with `respx`, and routes use FastAPI dependency overrides.
+All tests are offline: Open Food Facts is mocked with `respx`, Hevy is faked,
+and routes use FastAPI dependency overrides with a real SQLite entries store
+in `tmp_path`.
 
 ## Installazione servizio (systemd user, su urano)
 
@@ -80,17 +100,16 @@ loginctl enable-linger $USER
 Questo passaggio richiede l'account di Alessandro e non può essere automatizzato
 senza sudo/polkit.
 
-- **Food database locale**: `app/integrations/food_db.py` (`FoodDatabase`) gestisce
-  alimenti (macro per 100 g) e voci del diario in SQLite `data/foods.db`
-  (volume `./data` in Docker — sopravvive ai rebuild). Nessuna credenziale,
-  funziona offline.
-- **Seed**: `python -m app.seed_foods` carica i 30 alimenti comuni da
-  `data/seed_foods.json` (idempotente: salta i nomi già presenti).
+- **Diario locale**: `app/integrations/entries.py` (`EntryStore`) salva le
+  voci loggate (snapshot alimento + grammi + pasto) in SQLite `data/entries.db`
+  (volume `./data` in Docker — sopravvive ai rebuild). Nessuna credenziale.
+- **Alimenti**: `app/integrations/off.py` (`OFFService`) — Open Food Facts è
+  l'unica fonte dati; non esiste più un food DB locale né seed.
 - **Meals**: la UI/`POST /api/log` usa i nomi `breakfast|lunch|dinner|snacks`,
-  validati in `FoodDatabase.MEALS`.
+  validati in `EntryStore.MEALS`.
 - **Hevy**: API key read from `HEVY_API_KEY` env var or
   `/home/mandala/.hevy/api_key`; REST `https://api.hevyapp.com/v1/workouts`
   with header `api-key`.
-- Services are exposed to FastAPI via `get_food_db_service()` /
-  `get_hevy_service()` dependencies, so tests (or the future HTMX layer) can
-  override them cleanly.
+- Services are exposed to FastAPI via `get_off_service()` /
+  `get_entry_store()` / `get_hevy_service()` dependencies, so tests (or the
+  future HTMX layer) can override them cleanly.

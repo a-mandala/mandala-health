@@ -8,14 +8,12 @@
 ```bash
 cd ~/workspace/mandala-health
 
-# 1. build + up (nessuna credenziale necessaria: il food database è locale)
+# 1. build + up (nessuna credenziale necessaria: gli alimenti vengono da Open Food Facts,
+#    il diario è locale in ./data)
 docker compose up -d --build
 
-# 2. (opzionale) popola il food database con i 30 alimenti comuni
-docker compose exec health .venv/bin/python -m app.seed_foods
-
-# 3. verifica
-curl -s http://localhost:8020/api/today | head -c 300
+# 2. verifica (ricerca alimenti via Open Food Facts)
+curl -s "http://localhost:8020/api/foods/search?q=banana" | head -c 300
 ```
 
 Dal telefono (stessa rete): `http://<ip-urano>:8020`

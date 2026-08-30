@@ -1,64 +1,64 @@
-"""Tests for US-1 API endpoints against the real local FoodDatabase."""
+"""Tests for the food endpoints: search + barcode via Open Food Facts."""
 
 import pytest
 
 
-def test_food_search_endpoint_returns_results(make_client):
-    client = make_client(log_banana=False)
-
-    response = client.get("/api/foods/search", params={"q": "banana"})
+def test_food_search_returns_off_results(make_client):
+    response = make_client(log_banana=False).get("/api/foods/search", params={"q": "nutella"})
 
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 1
-    assert body[0]["name"] == "Banana"
-    assert body[0]["kcal_per_100g"] == 89.0
-    assert body[0]["protein_per_100g"] == 1.1
-    assert body[0]["carbs_per_100g"] == 22.8
-    assert body[0]["fat_per_100g"] == 0.3
+    assert body[0] == {
+        "food_id": "3017620422003",
+        "name": "Nutella",
+        "brand": "Ferrero",
+        "barcode": "3017620422003",
+        "kcal_per_100g": 539.0,
+        "protein_per_100g": 6.3,
+        "carbs_per_100g": 57.5,
+        "fat_per_100g": 30.9,
+    }
 
 
-def test_food_search_endpoint_requires_query(make_client):
+def test_food_search_requires_query(make_client):
     response = make_client().get("/api/foods/search")
 
     assert response.status_code == 422
 
 
-def test_log_endpoint_persists_entry_and_returns_summary(make_client):
-    client = make_client(log_banana=False)
-    food_id = client.food_db.search("banana")[0]["food_id"]
+def test_food_search_off_unreachable_returns_clean_json_503(make_client):
+    client = make_client()
+    client.off.fail = True
 
-    response = client.post(
-        "/api/log",
-        json={"food_id": food_id, "grams": 120.0, "meal": "lunch"},
-    )
+    response = client.get("/api/foods/search", params={"q": "banana"})
+
+    assert response.status_code == 503
+    body = response.json()
+    assert "detail" in body
+    assert "open food facts" in body["detail"].lower()
+
+
+def test_barcode_endpoint_returns_normalized_product(make_client):
+    response = make_client().get("/api/foods/barcode/9001")
 
     assert response.status_code == 200
-    # 89 kcal/100g * 120g = 106.8 kcal
-    assert response.json()["nutrition"]["energy"] == pytest.approx(106.8)
-    # entry is persisted in the DB with today's date
-    assert client.food_db.day_summary()["energy"] == pytest.approx(106.8)
+    body = response.json()
+    assert body["food_id"] == "9001"
+    assert body["name"] == "Banana"
+    assert body["kcal_per_100g"] == 89.0
 
 
-def test_log_endpoint_rejects_invalid_meal(make_client):
+def test_barcode_endpoint_unknown_product_returns_404(make_client):
+    response = make_client().get("/api/foods/barcode/0000")
+
+    assert response.status_code == 404
+
+
+def test_barcode_endpoint_off_unreachable_returns_503(make_client):
     client = make_client()
-    food_id = client.food_db.search("banana")[0]["food_id"]
+    client.off.fail = True
 
-    response = client.post(
-        "/api/log",
-        json={"food_id": food_id, "grams": 120.0, "meal": "brunch"},
-    )
+    response = client.get("/api/foods/barcode/9001")
 
-    assert response.status_code == 422
-
-
-def test_log_endpoint_rejects_non_positive_grams(make_client):
-    client = make_client()
-    food_id = client.food_db.search("banana")[0]["food_id"]
-
-    response = client.post(
-        "/api/log",
-        json={"food_id": food_id, "grams": 0, "meal": "lunch"},
-    )
-
-    assert response.status_code == 422
+    assert response.status_code == 503

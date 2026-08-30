@@ -4,6 +4,6 @@ __pycache__/
 .env
 *.sqlite3
 .pytest_cache/
-data/foods.db
+data/entries.db
 __pycache__/
 .venv/

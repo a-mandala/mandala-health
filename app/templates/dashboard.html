@@ -29,6 +29,12 @@
             hx-swap="outerHTML"
             class="space-y-3">
         <input type="hidden" name="food_id" id="food-id" />
+        <input type="hidden" name="name" id="food-name" />
+        <input type="hidden" name="brand" id="food-brand" />
+        <input type="hidden" name="kcal_per_100g" id="food-kcal" />
+        <input type="hidden" name="protein_per_100g" id="food-protein" />
+        <input type="hidden" name="carbs_per_100g" id="food-carbs" />
+        <input type="hidden" name="fat_per_100g" id="food-fat" />
         <p id="selected-food" class="text-sm text-slate-300"></p>
 
         <div>
@@ -70,12 +76,28 @@
     {% endif %}
   </section>
 
+  <footer class="mt-8 text-center">
+    <a href="/api/version" class="text-slate-500 text-xs">v{{ app_version["git_hash"] }}</a>
+  </footer>
+
   <script>
     document.addEventListener("click", function (event) {
       const btn = event.target.closest("#food-results button");
       if (!btn) return;
-      document.getElementById("food-id").value = btn.dataset.foodId;
-      document.getElementById("selected-food").textContent = "Selezionato: " + btn.dataset.name;
+      const map = {
+        "food-id": btn.dataset.foodId,
+        "food-name": btn.dataset.name,
+        "food-brand": btn.dataset.brand,
+        "food-kcal": btn.dataset.kcal,
+        "food-protein": btn.dataset.protein,
+        "food-carbs": btn.dataset.carbs,
+        "food-fat": btn.dataset.fat,
+      };
+      for (const [id, value] of Object.entries(map)) {
+        document.getElementById(id).value = value;
+      }
+      document.getElementById("selected-food").textContent =
+        "Selezionato: " + btn.dataset.name + (btn.dataset.brand ? " (" + btn.dataset.brand + ")" : "");
       document.getElementById("food-search-results").innerHTML = "";
     });
   </script>

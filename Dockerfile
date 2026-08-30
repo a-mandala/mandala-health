@@ -3,15 +3,20 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
+# Version visibility: git hash/tag injected by CI (docker-publish workflow).
+# Without it (local builds) the app falls back to "dev".
+ARG GIT_VERSION=dev
+ENV APP_VERSION=${GIT_VERSION} \
+    APP_GIT_HASH=${GIT_VERSION}
+
 # Install deps first for layer caching
 COPY pyproject.toml uv.lock ./
 RUN pip install --no-cache-dir uv && uv sync --frozen --no-dev --no-install-project
 
 COPY app/ app/
 COPY deploy/ deploy/
-COPY data/seed_foods.json data/seed_foods.json
 
-# Local food database (SQLite) lives in /app/data (mounted as a volume)
+# Local diary database (SQLite) lives in /app/data (mounted as a volume)
 RUN mkdir -p /app/data
 
 EXPOSE 8020
