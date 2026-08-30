@@ -1,0 +1,15 @@
+services:
+  health:
+    build: .
+    container_name: mandala-health
+    ports:
+      - "8020:8020"
+    restart: unless-stopped
+    env_file:
+      - .env   # CRONOMETER_USERNAME / CRONOMETER_PASSWORD
+    volumes:
+      - ./data:/app/data   # sqlite storage persists here
+
+  # Cronometer creds env example (.env):
+  # CRONOMETER_USERNAME=...
+  # CRONOMETER_PASSWORD=...

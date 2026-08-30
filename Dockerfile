@@ -1,0 +1,14 @@
+# Mandala Health — container image
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Install deps first for layer caching
+COPY pyproject.toml uv.lock ./
+RUN pip install --no-cache-dir uv && uv sync --frozen --no-dev --no-install-project
+
+COPY app/ app/
+COPY deploy/ deploy/
+
+EXPOSE 8020
+CMD [".venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8020"]

@@ -61,3 +61,45 @@ class CronometerService:
             "carbs": macros.get("carbs"),
             "fat": macros.get("fat"),
         }
+
+    def search_foods(self, query: str) -> list[dict]:
+        """Search foods and normalize results with per-100g macros.
+
+        Design note: search_food() results do not include nutrient values,
+        so we batch-fetch full details via get_foods(), whose nutrients are
+        already stored per-100g — no manual scaling needed. One extra call
+        per search, but it keeps kcal visible in the UI autocomplete.
+        """
+        raw = self._client.search_food(query)
+        foods = self._client.get_foods([f["id"] for f in raw])
+        by_id = {f.get("id"): f for f in foods}
+        results = []
+        for item in raw:
+            detail = by_id.get(item["id"], {})
+            nutrients = detail.get("nutrients", {}) or {}
+            results.append(
+                {
+                    "food_id": item["id"],
+                    "measure_id": item.get("measureId"),
+                    "name": item.get("name"),
+                    "source": item.get("source"),
+                    "measure_display": item.get("measureDisplayName"),
+                    "kcal_per_100g": nutrients.get("energy"),
+                    "protein_per_100g": nutrients.get("protein"),
+                }
+            )
+        return results
+
+    MEAL_GROUPS = {"breakfast": 1, "lunch": 2, "dinner": 3, "snacks": 4}
+
+    def add_food_entry(self, food_id: int, measure_id: int, grams: float, meal: str) -> dict:
+        """Log a serving to today's diary. `meal` is a name mapped to
+        the client's integer diary_group (1=breakfast … 4=snacks)."""
+        if meal not in self.MEAL_GROUPS:
+            raise ValueError(f"unknown meal: {meal!r}")
+        return self._client.add_serving(
+            food_id=food_id,
+            measure_id=measure_id,
+            grams=grams,
+            diary_group=self.MEAL_GROUPS[meal],
+        )
