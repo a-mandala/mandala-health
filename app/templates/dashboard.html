@@ -29,7 +29,6 @@
             hx-swap="outerHTML"
             class="space-y-3">
         <input type="hidden" name="food_id" id="food-id" />
-        <input type="hidden" name="measure_id" id="measure-id" />
         <p id="selected-food" class="text-sm text-slate-300"></p>
 
         <div>
@@ -57,6 +56,7 @@
   </section>
 
   <section>
+    {% if last_workout %}
     <h2 class="text-lg font-semibold mb-2 text-slate-300">Ultima sessione</h2>
     <div class="rounded-2xl bg-slate-900 p-4">
       <p class="text-sm text-slate-400 mb-2">{{ last_workout["date"][:10] }}</p>
@@ -67,6 +67,7 @@
       </p>
       {% endfor %}
     </div>
+    {% endif %}
   </section>
 
   <script>
@@ -74,7 +75,6 @@
       const btn = event.target.closest("#food-results button");
       if (!btn) return;
       document.getElementById("food-id").value = btn.dataset.foodId;
-      document.getElementById("measure-id").value = btn.dataset.measureId;
       document.getElementById("selected-food").textContent = "Selezionato: " + btn.dataset.name;
       document.getElementById("food-search-results").innerHTML = "";
     });

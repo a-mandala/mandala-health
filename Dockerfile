@@ -10,5 +10,8 @@ RUN pip install --no-cache-dir uv && uv sync --frozen --no-dev --no-install-proj
 COPY app/ app/
 COPY deploy/ deploy/
 
+# Local food database (SQLite) lives in /app/data (mounted as a volume)
+RUN mkdir -p /app/data
+
 EXPOSE 8020
 CMD [".venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8020"]
