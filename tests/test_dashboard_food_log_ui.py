@@ -2,8 +2,6 @@
 
 from fastapi.testclient import TestClient
 
-from tests.test_api_food_log import SearchAndLogCronometer, make_cronometer_client
-
 
 def test_dashboard_has_quick_log_form(make_client):
     html = make_client().get("/").text
@@ -23,24 +21,25 @@ def test_dashboard_macros_section_is_htmx_target(make_client):
     assert 'id="macros-summary"' in html
 
 
-def test_log_htmx_request_returns_updated_macros_fragment():
-    client, _ = make_cronometer_client()
+def test_log_htmx_request_returns_updated_macros_fragment(make_client):
+    client = make_client(log_banana=False)
+    food_id = client.food_db.search("banana")[0]["food_id"]
 
     response = client.post(
         "/api/log",
-        json={"food_id": 101, "measure_id": 10, "grams": 120.0, "meal": "lunch"},
+        json={"food_id": food_id, "grams": 120.0, "meal": "lunch"},
         headers={"HX-Request": "true"},
     )
 
     assert response.status_code == 200
     html = response.text
     assert 'id="macros-summary"' in html
-    assert "100" in html  # updated energy value from the fake service
+    assert "107" in html  # 89 kcal/100g * 120 g (rounded in the fragment)
     assert "<html" not in html.lower()  # fragment, not full page
 
 
-def test_search_htmx_request_returns_dropdown_fragment():
-    client, _ = make_cronometer_client()
+def test_search_htmx_request_returns_dropdown_fragment(make_client):
+    client = make_client(log_banana=False)
 
     response = client.get(
         "/api/foods/search",
@@ -51,7 +50,6 @@ def test_search_htmx_request_returns_dropdown_fragment():
     assert response.status_code == 200
     html = response.text
     assert "Banana" in html
-    assert "89" in html  # kcal_per_100g visible next to the result
     assert "89.0 kcal/100g" in html
 
 

@@ -29,7 +29,6 @@
             hx-swap="outerHTML"
             class="space-y-3">
         <input type="hidden" name="food_id" id="food-id" />
-        <input type="hidden" name="measure_id" id="measure-id" />
         <p id="selected-food" class="text-sm text-slate-300"></p>
 
         <div>
@@ -74,7 +73,6 @@
       const btn = event.target.closest("#food-results button");
       if (!btn) return;
       document.getElementById("food-id").value = btn.dataset.foodId;
-      document.getElementById("measure-id").value = btn.dataset.measureId;
       document.getElementById("selected-food").textContent = "Selezionato: " + btn.dataset.name;
       document.getElementById("food-search-results").innerHTML = "";
     });

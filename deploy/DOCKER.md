@@ -8,15 +8,11 @@
 ```bash
 cd ~/workspace/mandala-health
 
-# 1. crea .env con le credenziali Cronometer
-cat > .env <<'EOF'
-CRONOMETER_USERNAME=...
-CRONOMETER_PASSWORD=...
-EOF
-chmod 600 .env
-
-# 2. build + up
+# 1. build + up (nessuna credenziale necessaria: il food database è locale)
 docker compose up -d --build
+
+# 2. (opzionale) popola il food database con i 30 alimenti comuni
+docker compose exec health .venv/bin/python -m app.seed_foods
 
 # 3. verifica
 curl -s http://localhost:8020/api/today | head -c 300

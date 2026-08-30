@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/a-mandala/mandala-health/actions/workflows/ci.yml/badge.svg)](https://github.com/a-mandala/mandala-health/actions/workflows/ci.yml) [![Docker](https://github.com/a-mandala/mandala-health/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/a-mandala/mandala-health/actions/workflows/docker-publish.yml) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 
-Self-hosted personal health dashboard on urano: nutrition (Cronometer),
+Self-hosted personal health dashboard on urano: nutrition (food database locale SQLite),
 training (Hevy), health metrics (Garmin) and medical archive — one integrated
 panel, privacy-first, LAN-only.
 
@@ -10,7 +10,8 @@ panel, privacy-first, LAN-only.
 
 - Python + FastAPI, Jinja2 templates, HTMX + Alpine.js, Tailwind (CDN)
 - SQLite for local cache/history
-- Integrations: Cronometer (mobile API), Hevy (REST), Garmin (MCP)
+- Food database: locale, SQLite (`data/foods.db`), nessuna credenziale necessaria
+- Integrations: Hevy (REST), Garmin (MCP)
 - TDD enforced (pytest)
 
 ## Status
@@ -36,7 +37,7 @@ Endpoints:
 uv run pytest -v
 ```
 
-All tests are offline: the Cronometer client is injected (fake), Hevy is
+All tests are offline: the food database runs on SQLite in `tmp_path`, Hevy is
 mocked with `respx`, and routes use FastAPI dependency overrides.
 
 ## Installazione servizio (systemd user, su urano)
@@ -79,24 +80,17 @@ loginctl enable-linger $USER
 Questo passaggio richiede l'account di Alessandro e non può essere automatizzato
 senza sudo/polkit.
 
-- **Cronometer**: we reuse the client installed in `~/cronometer-api-mcp/.venv`
-  instead of duplicating it. `app/integrations/cronometer.py` appends that
-  venv's `site-packages` (and the editable `src/` layout) to `sys.path` on
-  first use, and loads credentials from `~/cronometer-api-mcp/.env`
-  (`CRONOMETER_USERNAME` / `CRONOMETER_PASSWORD`). Note: the client's method
-  is `get_consumed_nutrients(day)` → `{"macros": {...}}`, which the wrapper
-  maps to `{energy, protein, carbs, fat}`.
-- **Food search (US-1)**: `CronometerService.search_foods()` calls the client's
-  `search_food(query)`, then batch-fetches details with `get_foods()` — the
-  Cronometer API already stores nutrients **per-100g** in that response, so
-  `kcal_per_100g` / `protein_per_100g` need no manual scaling. Cost: one extra
-  API call per search, in exchange for macros visible in the UI autocomplete.
-- **Meal mapping (US-1)**: the UI/`POST /api/log` uses meal names
-  (`breakfast|lunch|dinner|snacks`); the client expects integer
-  `diary_group` (1–4), mapped in `CronometerService.MEAL_GROUPS`.
+- **Food database locale**: `app/integrations/food_db.py` (`FoodDatabase`) gestisce
+  alimenti (macro per 100 g) e voci del diario in SQLite `data/foods.db`
+  (volume `./data` in Docker — sopravvive ai rebuild). Nessuna credenziale,
+  funziona offline.
+- **Seed**: `python -m app.seed_foods` carica i 30 alimenti comuni da
+  `data/seed_foods.json` (idempotente: salta i nomi già presenti).
+- **Meals**: la UI/`POST /api/log` usa i nomi `breakfast|lunch|dinner|snacks`,
+  validati in `FoodDatabase.MEALS`.
 - **Hevy**: API key read from `HEVY_API_KEY` env var or
   `/home/mandala/.hevy/api_key`; REST `https://api.hevyapp.com/v1/workouts`
   with header `api-key`.
-- Services are exposed to FastAPI via `get_cronometer_service()` /
+- Services are exposed to FastAPI via `get_food_db_service()` /
   `get_hevy_service()` dependencies, so tests (or the future HTMX layer) can
   override them cleanly.
