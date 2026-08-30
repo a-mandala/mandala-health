@@ -43,6 +43,13 @@ class FoodDatabase:
         self._conn.executescript(_SCHEMA)
         self._conn.commit()
 
+    @property
+    def path(self) -> Path:
+        return self._db_path
+
+    def food_count(self) -> int:
+        return self._conn.execute("SELECT COUNT(*) FROM foods").fetchone()[0]
+
     def search(self, query: str) -> list[dict]:
         query = query.strip().lower()
         if not query:
@@ -124,4 +131,8 @@ class FoodDatabase:
 
 
 def get_food_db_service() -> FoodDatabase:
-    return FoodDatabase()
+    from app.seed_foods import ensure_seeded  # local import: avoids circular import
+
+    db = FoodDatabase()
+    ensure_seeded(db)
+    return db
