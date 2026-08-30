@@ -6,7 +6,7 @@ requires-python = ">=3.11"
 dependencies = ["fastapi>=0.115", "uvicorn", "jinja2", "httpx", "pydantic"]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-asyncio", "respx"]
+dev = ["pytest", "pytest-asyncio", "respx", "pyyaml"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
