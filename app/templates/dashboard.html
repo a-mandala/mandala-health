@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="it" class="bg-slate-950">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mandala Health</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 p-4 max-w-md mx-auto">
+  <h1 class="text-2xl font-bold mb-4">Mandala Health</h1>
+
+  <section class="mb-6">
+    <h2 class="text-lg font-semibold mb-2 text-slate-300">Oggi</h2>
+    <div class="rounded-2xl bg-slate-900 p-4 space-y-3">
+      {% for key, label, unit in [("energy", "Kcal", "kcal"), ("protein", "Proteine", "g"), ("fat", "Grassi", "g")] %}
+      <div>
+        <div class="flex justify-between text-sm">
+          <span>{{ label }}</span>
+          <span class="text-slate-400">{{ nutrition[key] | round(0) }} / {{ targets[key] | round(0) }} {{ unit }}</span>
+        </div>
+        <div class="h-2 bg-slate-800 rounded-full mt-1">
+          <div class="h-2 rounded-full {% if nutrition[key] > targets[key] %}bg-red-500{% else %}bg-emerald-500{% endif %}"
+               style="width: {{ [((nutrition[key] or 0) / targets[key] * 100), 100] | min }}%"></div>
+        </div>
+      </div>
+      {% endfor %}
+      <div class="flex justify-between text-sm">
+        <span>Carboidrati</span>
+        <span class="text-slate-400">{{ nutrition["carbs"] | round(0) }} g</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="text-lg font-semibold mb-2 text-slate-300">Ultima sessione</h2>
+    <div class="rounded-2xl bg-slate-900 p-4">
+      <p class="text-sm text-slate-400 mb-2">{{ last_workout["date"][:10] }}</p>
+      {% for ex in last_workout["exercises"] %}
+      <p class="font-medium">{{ ex["name"] }}</p>
+      <p class="text-sm text-slate-400 mb-2">
+        {% for s in ex["sets"] %}{{ s["weight_kg"] }}kg × {{ s["reps"] }}{% if not loop.last %} · {% endif %}{% endfor %}
+      </p>
+      {% endfor %}
+    </div>
+  </section>
+</body>
+</html>
