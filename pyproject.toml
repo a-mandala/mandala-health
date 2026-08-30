@@ -1,0 +1,9 @@
+[project]
+name = "mandala-health"
+version = "0.0.1"
+description = "Self-hosted integrated health dashboard (nutrition, training, health) - LAN only"
+requires-python = ">=3.11"
+dependencies = ["fastapi>=0.115", "uvicorn", "jinja2", "httpx", "pydantic"]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio", "respx"]
