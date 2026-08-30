@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 from app.integrations.food_db import MEALS, FoodDatabase, get_food_db_service
 from app.integrations.hevy import HevyService, get_hevy_service
+from app.version import version_info
 
 app = FastAPI(title="mandala-health")
 
@@ -69,6 +70,11 @@ def api_log(
     return {"nutrition": nutrition}
 
 
+@app.get("/api/version")
+def api_version():
+    return version_info()
+
+
 @app.get("/", response_class=HTMLResponse)
 def dashboard(
     request: Request,
@@ -83,5 +89,6 @@ def dashboard(
             "nutrition": nutrition,
             "targets": DAILY_TARGETS,
             "last_workout": hevy.last_workout(),
+            "app_version": version_info(),
         },
     )

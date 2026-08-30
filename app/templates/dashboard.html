@@ -70,6 +70,10 @@
     {% endif %}
   </section>
 
+  <footer class="mt-8 text-center">
+    <a href="/api/version" class="text-slate-500 text-xs">v{{ app_version["git_hash"] }}</a>
+  </footer>
+
   <script>
     document.addEventListener("click", function (event) {
       const btn = event.target.closest("#food-results button");
