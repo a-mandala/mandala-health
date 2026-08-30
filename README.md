@@ -37,7 +37,45 @@ uv run pytest -v
 All tests are offline: the Cronometer client is injected (fake), Hevy is
 mocked with `respx`, and routes use FastAPI dependency overrides.
 
-## Integration choices
+## Installazione servizio (systemd user, su urano)
+
+Il servizio gira come **user service** di systemd: niente sudo, nessun file
+in `/etc/systemd`. I file sono pronti in `deploy/`.
+
+1. Da un terminale sul server urano (account di Alessandro), dalla root del repo:
+
+   ```bash
+   ./deploy/install-service.sh
+   ```
+
+   Lo script copia `deploy/mandala-health.service` in
+   `~/.config/systemd/user/`, fa `systemctl --user daemon-reload` e abilita/avvia
+   il servizio (uvicorn su `0.0.0.0:8020`).
+
+2. Verifica:
+
+   ```bash
+   systemctl --user status mandala-health.service
+   journalctl --user -u mandala-health.service -f
+   ```
+
+3. Accesso dal telefono (stessa LAN):
+
+   ```text
+   http://<ip-urano>:8020
+   ```
+
+   (indirizzo IP di urano, es. `192.168.1.x` — `ip addr` per trovarlo).
+
+Limiti noto: un user service si ferma al logout. Per farlo ripartire al boot e
+tenerlo vivo senza sessione aperta, eseguire **una volta** (chiede la password):
+
+```bash
+loginctl enable-linger $USER
+```
+
+Questo passaggio richiede l'account di Alessandro e non può essere automatizzato
+senza sudo/polkit.
 
 - **Cronometer**: we reuse the client installed in `~/cronometer-api-mcp/.venv`
   instead of duplicating it. `app/integrations/cronometer.py` appends that
