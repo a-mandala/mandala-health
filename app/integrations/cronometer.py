@@ -41,7 +41,7 @@ def _load_cronometer_client_class():
     return CronometerClient
 
 
-def get_cronometer_service() -> CronometerService:
+def get_cronometer_service() -> "CronometerService":
     return CronometerService()
 
 

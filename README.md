@@ -1,5 +1,7 @@
 # Mandala Health
 
+[![CI](https://github.com/a-mandala/mandala-health/actions/workflows/ci.yml/badge.svg)](https://github.com/a-mandala/mandala-health/actions/workflows/ci.yml) [![Docker](https://github.com/a-mandala/mandala-health/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/a-mandala/mandala-health/actions/workflows/docker-publish.yml) [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
 Self-hosted personal health dashboard on urano: nutrition (Cronometer),
 training (Hevy), health metrics (Garmin) and medical archive — one integrated
 panel, privacy-first, LAN-only.
