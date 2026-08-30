@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     environment:
       # pass-through opzionale (da .env o ambiente host); se assente l'app
-      # degrada senza la card workout, il food log locale funziona comunque
+      # degrada senza la card workout, il diario locale funziona comunque
       - HEVY_API_KEY=${HEVY_API_KEY:-}
     volumes:
       - ./data:/app/data

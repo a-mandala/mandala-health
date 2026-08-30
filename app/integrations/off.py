@@ -16,6 +16,16 @@ class OFFError(RuntimeError):
     """Open Food Facts is unreachable or returned an unusable response."""
 
 
+class OFFNotFoundError(OFFError):
+    """The requested product does not exist on Open Food Facts."""
+
+
+USER_AGENT = (
+    "mandala-health/0.1 (https://github.com/a-mandala/mandala-health; "
+    "AGPL-3.0) httpx"
+)
+
+
 class OFFService:
     def __init__(self, timeout: float = 10.0):
         self._timeout = timeout
@@ -31,6 +41,7 @@ class OFFService:
                     "json": "1",
                     "page_size": page_size,
                 },
+                headers={"User-Agent": USER_AGENT},
                 timeout=self._timeout,
             )
             resp.raise_for_status()
@@ -43,14 +54,18 @@ class OFFService:
 
     def get_by_barcode(self, code: str) -> dict:
         try:
-            resp = httpx.get(PRODUCT_URL.format(code=code), timeout=self._timeout)
+            resp = httpx.get(
+                PRODUCT_URL.format(code=code),
+                headers={"User-Agent": USER_AGENT},
+                timeout=self._timeout,
+            )
             resp.raise_for_status()
             body = resp.json()
         except (httpx.HTTPError, ValueError) as exc:
             raise OFFError(f"Open Food Facts unreachable: {exc}") from exc
         product = body.get("product")
         if not body.get("status") or not isinstance(product, dict):
-            raise OFFError(f"product {code!r} not found on Open Food Facts")
+            raise OFFNotFoundError(f"product {code!r} not found on Open Food Facts")
         return self._normalize(product)
 
     @staticmethod

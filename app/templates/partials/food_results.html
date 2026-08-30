@@ -4,9 +4,17 @@
     <button type="button"
             class="w-full min-h-[44px] px-4 py-2 flex items-center justify-between text-left active:bg-slate-800"
             data-food-id="{{ f.food_id }}"
-            data-name="{{ f.name }}">
-      <span class="font-medium">{{ f.name }}</span>
-      <span class="text-sm text-emerald-400 whitespace-nowrap">{{ f.kcal_per_100g }} kcal/100g</span>
+            data-name="{{ f.name }}"
+            data-brand="{{ f.brand or '' }}"
+            data-kcal="{{ f.kcal_per_100g }}"
+            data-protein="{{ f.protein_per_100g }}"
+            data-carbs="{{ f.carbs_per_100g }}"
+            data-fat="{{ f.fat_per_100g }}">
+      <span class="min-w-0">
+        <span class="font-medium block truncate">{{ f.name }}</span>
+        {% if f.brand %}<span class="text-xs text-slate-400 block truncate">{{ f.brand }}</span>{% endif %}
+      </span>
+      <span class="text-sm text-emerald-400 whitespace-nowrap ml-2">{{ f.kcal_per_100g }} kcal/100g</span>
     </button>
   </li>
   {% else %}

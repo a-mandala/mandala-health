@@ -1,4 +1,4 @@
-"""Tests for the API routes (TestClient + dependency override of services)."""
+"""Tests for the API routes (TestClient + dependency overrides of services)."""
 
 import pytest
 
@@ -8,7 +8,7 @@ def test_today_returns_nutrition_and_last_workout(make_client):
 
     assert response.status_code == 200
     body = response.json()
-    # 200 g of seeded banana (89 kcal/100g) logged at breakfast
+    # 200 g of banana (89 kcal/100g) logged at breakfast in the local entries DB
     assert body["nutrition"]["energy"] == pytest.approx(178.0)
     assert body["nutrition"]["protein"] == pytest.approx(2.2)
     assert body["last_workout"] == {

@@ -68,6 +68,19 @@ def test_search_sends_query_and_page_size_params():
 
 
 @respx.mock
+def test_search_sends_identifying_user_agent():
+    route = respx.get(f"{BASE}/cgi/search.pl").mock(
+        return_value=httpx.Response(200, json=off_search_response([]))
+    )
+    svc = OFFService()
+
+    svc.search("banana")
+
+    headers = route.calls.last.request.headers
+    assert "mandala-health" in headers["User-Agent"]
+
+
+@respx.mock
 def test_search_converts_kj_to_kcal_when_kcal_missing():
     product = off_product()
     del product["nutriments"]["energy-kcal_100g"]

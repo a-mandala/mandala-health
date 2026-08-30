@@ -45,6 +45,8 @@ jobs:
           push: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_VERSION=${{ steps.git-version.outputs.value }}
 
   # Smoke test: avvia il container via compose e verifica che l'app risponda.
   # Protegge da errori runtime (es. ModuleNotFoundError all'avvio) che i test
@@ -67,8 +69,11 @@ jobs:
             sleep 2
           done
           echo "app did not become healthy"; docker compose logs health; exit 1
-      - name: Smoke test search endpoint (DB auto-seeds on startup)
+      - name: Smoke test version endpoint (git hash visible in UI/API)
         run: |
-          # No manual 'python -m app.seed_foods': the app must seed data/foods.db
-          # itself when the foods table is empty (regression test for empty searchbar).
-          curl -sf "http://localhost:8020/api/foods/search?q=banana" | grep -q "Banana"
+          VERSION=$(curl -sf http://localhost:8020/api/version)
+          echo "$VERSION"
+          echo "$VERSION" | grep -q '"version"'
+      - name: Smoke test search endpoint (Open Food Facts is the data source)
+        run: |
+          curl -sf "http://localhost:8020/api/foods/search?q=nutella" | grep -qi "nutella"
