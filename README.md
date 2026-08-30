@@ -84,6 +84,14 @@ senza sudo/polkit.
   (`CRONOMETER_USERNAME` / `CRONOMETER_PASSWORD`). Note: the client's method
   is `get_consumed_nutrients(day)` → `{"macros": {...}}`, which the wrapper
   maps to `{energy, protein, carbs, fat}`.
+- **Food search (US-1)**: `CronometerService.search_foods()` calls the client's
+  `search_food(query)`, then batch-fetches details with `get_foods()` — the
+  Cronometer API already stores nutrients **per-100g** in that response, so
+  `kcal_per_100g` / `protein_per_100g` need no manual scaling. Cost: one extra
+  API call per search, in exchange for macros visible in the UI autocomplete.
+- **Meal mapping (US-1)**: the UI/`POST /api/log` uses meal names
+  (`breakfast|lunch|dinner|snacks`); the client expects integer
+  `diary_group` (1–4), mapped in `CronometerService.MEAL_GROUPS`.
 - **Hevy**: API key read from `HEVY_API_KEY` env var or
   `/home/mandala/.hevy/api_key`; REST `https://api.hevyapp.com/v1/workouts`
   with header `api-key`.
