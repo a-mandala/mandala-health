@@ -56,3 +56,21 @@ def test_last_workout_sends_api_key_header():
     HevyService(api_key="test-key").last_workout()
 
     assert route.calls.last.request.headers["api-key"] == "test-key"
+
+
+def test_last_workout_returns_none_without_api_key(monkeypatch, tmp_path):
+    monkeypatch.delenv("HEVY_API_KEY", raising=False)
+    monkeypatch.setattr(
+        "app.integrations.hevy.DEFAULT_API_KEY_PATH", str(tmp_path / "missing")
+    )
+
+    assert HevyService().last_workout() is None
+
+
+@respx.mock
+def test_last_workout_returns_none_on_api_error():
+    respx.get("https://api.hevyapp.com/v1/workouts").mock(
+        return_value=httpx.Response(401)
+    )
+
+    assert HevyService(api_key="bad-key").last_workout() is None

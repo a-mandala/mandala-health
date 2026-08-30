@@ -5,6 +5,10 @@ services:
     ports:
       - "8020:8020"
     restart: unless-stopped
+    environment:
+      # pass-through opzionale (da .env o ambiente host); se assente l'app
+      # degrada senza la card workout, il food log locale funziona comunque
+      - HEVY_API_KEY=${HEVY_API_KEY:-}
     volumes:
       - ./data:/app/data
     labels:

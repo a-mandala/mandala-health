@@ -56,6 +56,7 @@
   </section>
 
   <section>
+    {% if last_workout %}
     <h2 class="text-lg font-semibold mb-2 text-slate-300">Ultima sessione</h2>
     <div class="rounded-2xl bg-slate-900 p-4">
       <p class="text-sm text-slate-400 mb-2">{{ last_workout["date"][:10] }}</p>
@@ -66,6 +67,7 @@
       </p>
       {% endfor %}
     </div>
+    {% endif %}
   </section>
 
   <script>
