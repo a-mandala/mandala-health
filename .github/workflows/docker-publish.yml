@@ -67,7 +67,8 @@ jobs:
             sleep 2
           done
           echo "app did not become healthy"; docker compose logs health; exit 1
-      - name: Seed foods and smoke test search endpoint
+      - name: Smoke test search endpoint (DB auto-seeds on startup)
         run: |
-          docker compose exec -T health .venv/bin/python -m app.seed_foods
+          # No manual 'python -m app.seed_foods': the app must seed data/foods.db
+          # itself when the foods table is empty (regression test for empty searchbar).
           curl -sf "http://localhost:8020/api/foods/search?q=banana" | grep -q "Banana"

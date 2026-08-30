@@ -9,6 +9,7 @@ RUN pip install --no-cache-dir uv && uv sync --frozen --no-dev --no-install-proj
 
 COPY app/ app/
 COPY deploy/ deploy/
+COPY data/seed_foods.json data/seed_foods.json
 
 # Local food database (SQLite) lives in /app/data (mounted as a volume)
 RUN mkdir -p /app/data
