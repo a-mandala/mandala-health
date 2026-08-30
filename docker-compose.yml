@@ -20,5 +20,4 @@ services:
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ~/.docker/config.json:/config.json:ro   # token per ghcr.io (public image: può essere omesso)
     command: --interval 300 --label-enable --cleanup
