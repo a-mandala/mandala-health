@@ -27,9 +27,25 @@ Dal telefono (stessa rete): `http://<ip-urano>:8020`
 ## Persistenza
 - SQLite in `./data/` (bind mount) — sopravvive a rebuild/upgrade del container
 
-## Aggiornamento
+## Auto-aggiornamento (watchtower)
+
+`docker-compose.yml` include un servizio **watchtower** che ogni 5 minuti
+controlla se su ghcr.io è stata pubblicata un'immagine più recente (cosa che
+la CI fa automaticamente a ogni merge su main) e ricrea il container.
+
+Permessi necessari: watchtower usa il socket docker — va eseguito con un
+account nel gruppo `docker` (o rootless docker configurato).
+
+Comandi utili:
 ```bash
-git pull && docker compose up -d --build
+docker compose logs watchtower        # vedere i controlli
+docker compose exec health curl -s localhost:8020/api/today | head -c 200
+```
+
+## Avvio manuale (senza watchtower)
+
+```bash
+docker compose up -d health
 ```
 
 ## Nota permessi

@@ -1,7 +1,6 @@
 services:
   health:
     image: ghcr.io/a-mandala/mandala-health:latest
-    build: .
     container_name: mandala-health
     ports:
       - "8020:8020"
@@ -10,3 +9,16 @@ services:
       - .env
     volumes:
       - ./data:/app/data
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+  # Auto-update: controlla ghcr.io ogni 5 minuti e ricrea il container
+  # quando esce una nuova immagine (published automatically by CI on main).
+  watchtower:
+    image: containrrr/watchtower
+    container_name: mandala-health-updater
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.docker/config.json:/config.json:ro   # token per ghcr.io (public image: può essere omesso)
+    command: --interval 300 --label-enable --cleanup
