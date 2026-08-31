@@ -99,6 +99,29 @@ def api_food_barcode(
     return product
 
 
+@app.get("/scan")
+def scan_page(
+    request: Request,
+    code: str = "",
+    off: OFFService = Depends(get_off_service),
+):
+    """Deep-link page for the phone's native barcode scanner (no camera permission)."""
+    product = None
+    error = None
+    if code.strip():
+        try:
+            product = off.get_by_barcode(code.strip())
+        except OFFNotFoundError:
+            error = f"Nessun prodotto trovato per il codice {code}"
+        except OFFError as exc:
+            error = f"Errore Open Food Facts: {exc}"
+    return templates.TemplateResponse(
+        request=request,
+        name="scan.html",
+        context={"product": product, "error": error},
+    )
+
+
 class LogEntry(BaseModel):
     food_id: str
     name: str
