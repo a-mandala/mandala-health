@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="it" class="bg-slate-950">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mandala Health — Scansione</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 p-4 max-w-md mx-auto">
+  <h1 class="text-2xl font-bold mb-4">Scansione prodotto</h1>
+
+  {% if product %}
+    <section class="mb-6">
+      <div class="rounded-2xl bg-slate-900 p-4">
+        {% include "partials/barcode_result.html" %}
+      </div>
+    </section>
+  {% elif error %}
+    <section class="mb-6">
+      <div class="rounded-2xl bg-slate-900 p-4">
+        <p class="text-sm text-amber-300">{{ error }}</p>
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="mb-6">
+    <form action="/scan" method="get" class="rounded-2xl bg-slate-900 p-4 flex gap-2">
+      <input type="text" name="code" inputmode="numeric" autocomplete="off"
+             placeholder="Codice a barre" aria-label="Codice a barre"
+             class="w-full min-h-[44px] px-4 rounded-xl bg-slate-800 text-slate-100" />
+      <button type="submit"
+              class="min-h-[44px] min-w-[44px] px-4 rounded-xl bg-emerald-600 font-semibold active:bg-emerald-500">
+        Cerca
+      </button>
+    </form>
+  </section>
+
+  <p class="text-sm text-slate-400">
+    <a href="/" class="text-emerald-400 underline">← Torna alla dashboard</a>
+  </p>
+</body>
+</html>
