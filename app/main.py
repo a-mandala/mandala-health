@@ -9,6 +9,7 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
@@ -18,6 +19,12 @@ from app.integrations.off import OFFError, OFFNotFoundError, OFFService, get_off
 from app.version import version_info
 
 app = FastAPI(title="mandala-health")
+
+app.mount(
+    "/static",
+    StaticFiles(directory=str(Path(__file__).parent / "static")),
+    name="static",
+)
 
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
@@ -62,14 +69,34 @@ def api_foods_search(
 @app.get("/api/foods/barcode/{code}")
 def api_food_barcode(
     code: str,
+    request: Request,
     off: OFFService = Depends(get_off_service),
 ):
     try:
-        return off.get_by_barcode(code)
+        product = off.get_by_barcode(code)
     except OFFNotFoundError as exc:
+        if request.headers.get("HX-Request"):
+            return templates.TemplateResponse(
+                request=request,
+                name="partials/barcode_error.html",
+                context={"message": f"Nessun prodotto trovato per il codice {code}"},
+            )
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except OFFError as exc:
+        if request.headers.get("HX-Request"):
+            return templates.TemplateResponse(
+                request=request,
+                name="partials/barcode_error.html",
+                context={"message": f"Errore Open Food Facts: {exc}"},
+            )
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse(
+            request=request,
+            name="partials/barcode_result.html",
+            context={"product": product},
+        )
+    return product
 
 
 class LogEntry(BaseModel):
