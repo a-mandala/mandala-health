@@ -1,0 +1,17 @@
+<div id="barcode-confirm-card" class="mt-2 rounded-2xl bg-slate-900 p-4">
+  <p class="text-xs text-slate-400 mb-1">Prodotto trovato</p>
+  <p class="font-medium">{{ product.name }}</p>
+  {% if product.brand %}<p class="text-xs text-slate-400">{{ product.brand }}</p>{% endif %}
+  <p class="text-sm text-emerald-400 mt-1">{{ product.kcal_per_100g }} kcal/100g</p>
+  <button type="button" id="barcode-confirm"
+          class="mt-3 w-full min-h-[44px] rounded-xl bg-emerald-600 font-semibold active:bg-emerald-500"
+          data-food-id="{{ product.food_id }}"
+          data-name="{{ product.name }}"
+          data-brand="{{ product.brand or '' }}"
+          data-kcal="{{ product.kcal_per_100g }}"
+          data-protein="{{ product.protein_per_100g }}"
+          data-carbs="{{ product.carbs_per_100g }}"
+          data-fat="{{ product.fat_per_100g }}">
+    Usa questo prodotto
+  </button>
+</div>
